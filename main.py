@@ -9,65 +9,67 @@ app = FastAPI()
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
+# Guarda as conexões ativas e idiomas de cada usuário
+connected_users = {}
+
 @app.get("/")
 async def home():
     return HTMLResponse(open("static/index.html", "r", encoding="utf-8").read())
 
-# Lista de clientes conectados
-clients = []
-
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
-    user = {"ws": websocket, "lang": "en"}  # idioma padrão
-    clients.append(user)
-    print("🔗 Cliente conectado.")
+    user_id = uuid.uuid4().hex[:8]
+    connected_users[user_id] = {"socket": websocket, "lang": "en"}
+    print(f"🔗 Usuário {user_id} conectado")
 
     try:
         while True:
             data = await websocket.receive_json()
 
-            # Registro do idioma
+            # Tipo: registro inicial
             if data["type"] == "register":
-                user["lang"] = data["lang"]
+                connected_users[user_id]["lang"] = data["lang"]
                 await websocket.send_json({
                     "type": "system",
-                    "msg": f"✅ Conectado! Idioma: {user['lang']}"
+                    "msg": f"Conectado com idioma {data['lang']} ✅"
                 })
                 continue
 
-            # Mensagem enviada por um usuário
+            # Tipo: mensagem enviada
             if data["type"] == "message":
                 text = data["text"]
+                sender_lang = connected_users[user_id]["lang"]
 
-                for c in clients:
-                    if c != user:
-                        # Tradução cruzada: envia no idioma do outro
-                        translated = GoogleTranslator(
-                            source=user["lang"], target=c["lang"]
-                        ).translate(text)
+                # Envia para todos os outros usuários conectados
+                for uid, info in connected_users.items():
+                    target_ws = info["socket"]
+                    target_lang = info["lang"]
 
-                        # Cria áudio
-                        audio_file = f"static/audio_{uuid.uuid4().hex[:8]}.mp3"
-                        try:
-                            gTTS(translated, lang=c["lang"]).save(audio_file)
-                        except Exception as e:
-                            print("⚠️ Erro ao gerar áudio:", e)
-                            audio_file = None
+                    # Traduz texto para o idioma do outro usuário
+                    translated = GoogleTranslator(source=sender_lang, target=target_lang).translate(text)
 
-                        # Remove áudio depois de 30s
-                        threading.Thread(target=lambda: (
-                            time.sleep(30),
-                            os.remove(audio_file) if audio_file and os.path.exists(audio_file) else None
-                        )).start()
+                    # Cria áudio
+                    audio_file = f"static/audio_{uuid.uuid4().hex[:8]}.mp3"
+                    tts = gTTS(translated, lang=target_lang)
+                    tts.save(audio_file)
 
-                        await c["ws"].send_json({
-                            "type": "translation",
-                            "from": user["lang"],
-                            "text": translated,
-                            "audio": f"/{audio_file}" if audio_file else None
-                        })
+                    # Apaga depois de 30s
+                    threading.Thread(
+                        target=lambda f=audio_file: (time.sleep(30), os.remove(f) if os.path.exists(f) else None)
+                    ).start()
+
+                    await target_ws.send_json({
+                        "type": "translation",
+                        "from": sender_lang,
+                        "translated": translated,
+                        "audio": f"/{audio_file}"
+                    })
 
     except WebSocketDisconnect:
-        print("🔌 Cliente desconectado")
-        clients.remove(user)
+        print(f"❌ Usuário {user_id} desconectado")
+    except Exception as e:
+        print("⚠️ Erro:", e)
+    finally:
+        connected_users.pop(user_id, None)
+        await websocket.close()

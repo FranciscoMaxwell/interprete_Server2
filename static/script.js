@@ -1,66 +1,82 @@
-let ws;
-let myLang = "pt";
+let ws, myLang;
 
 function connect() {
   myLang = document.getElementById("myLang").value;
-  ws = new WebSocket("wss://" + window.location.host + "/ws");
+  const protocol = location.protocol === "https:" ? "wss" : "ws";
+  ws = new WebSocket(`${protocol}://${location.host}/ws`);
 
   ws.onopen = () => {
+    ws.send(JSON.stringify({ type: "register", lang: myLang }));
     addMessage("✅ Conectado! Idioma: " + myLang, "system");
+
+    // Envia pings automáticos a cada 25s para evitar desconexão
+    setInterval(() => {
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: "ping" }));
+      }
+    }, 25000);
   };
 
   ws.onmessage = (event) => {
     const data = JSON.parse(event.data);
-    console.log("📩 Recebido:", data);
 
-    if (data.type === "translation" && data.text) {
-      addMessage("🗣 " + data.text, "other");
+    if (data.type === "translation") {
+      addMessage(`🗣 ${data.translated}`, "other");
 
-      // só toca áudio se existir
       if (data.audio) {
         const audio = new Audio(data.audio);
-        audio.play().catch(err => console.warn("🔇 Erro ao reproduzir:", err));
+        audio.play();
       }
+    } else if (data.type === "system") {
+      addMessage("⚙️ " + data.msg, "system");
     }
   };
 
-  ws.onclose = () => addMessage("🔌 Desconectado.", "system");
+  ws.onclose = () => addMessage("❌ Conexão encerrada.", "system");
 }
 
 function sendMessage() {
-  const input = document.getElementById("message");
-  const msg = input.value.trim();
+  const msg = document.getElementById("message").value.trim();
+  if (!msg) return;
 
-  if (msg && ws && ws.readyState === WebSocket.OPEN) {
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({ type: "message", text: msg }));
     addMessage(msg, "me");
-    ws.send(msg);
-    input.value = "";
+    document.getElementById("message").value = "";
+  } else {
+    alert("Conecte primeiro!");
   }
 }
 
-function addMessage(text, type) {
-  if (!text) return; // evita undefined
+function startListening() {
+  const rec = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+  rec.lang = mapLang(myLang);
+  rec.start();
+  rec.onresult = (e) => {
+    const txt = e.results[0][0].transcript;
+    document.getElementById("message").value = txt;
+    sendMessage();
+  };
+}
+
+function mapLang(code) {
+  const map = {
+    pt: "pt-BR",
+    en: "en-US",
+    es: "es-ES",
+    fr: "fr-FR",
+    de: "de-DE",
+    it: "it-IT",
+    ja: "ja-JP"
+  };
+  return map[code] || "en-US";
+}
+
+function addMessage(text, who) {
   const div = document.createElement("div");
-  div.className = "msg " + type;
+  div.className = "msg " + who;
   div.textContent = text;
   document.getElementById("messages").appendChild(div);
   const chat = document.getElementById("messages");
   chat.scrollTop = chat.scrollHeight;
-}
-
-// reconhecimento de voz (opcional)
-function startListening() {
-  if (!("webkitSpeechRecognition" in window)) {
-    alert("Seu navegador não suporta reconhecimento de voz.");
-    return;
-  }
-
-  const rec = new webkitSpeechRecognition();
-  rec.lang = myLang;
-  rec.onresult = (e) => {
-    const text = e.results[0][0].transcript;
-    document.getElementById("message").value = text;
-    sendMessage();
-  };
-  rec.start();
 }
