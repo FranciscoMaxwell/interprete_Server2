@@ -43,8 +43,12 @@ function connect() {
       // Áudio de tradução automática
       if (data.audio && data.lang === myLang) {
         const audio = new Audio(data.audio);
-        audio.play().catch(() => {});
+        audio.volume = 1.0;
+        audio.addEventListener("canplaythrough", () => {
+          audio.play().catch(err => console.warn("Falha ao tocar áudio:", err));
+        });
       }
+
     } else if (data.type === "file") {
       // Arquivo direto sem tradução
       addFileMessage(data.name, data.file, data.fileName, data.mimeType, "other");
@@ -128,7 +132,7 @@ function addMessage(name, original, translated, who) {
   const div = document.createElement("div");
   div.className = "msg " + who;
 
-  const nameTag = `<div class="username">${name}</div>`;
+  const nameTag = `<div class="username"><strong>${name}</strong></div>`;
 
   if (who === "me") {
     div.innerHTML = `${nameTag}<strong>${original}</strong>`;

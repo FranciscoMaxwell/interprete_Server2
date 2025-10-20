@@ -209,6 +209,22 @@
       gap: 6px;
     }
 
+
+    .username {
+    font-weight: bold;
+    font-size: 14px;
+    color: #0f172a;
+    text-align: left;
+    text-shadow: 0 1px 1px rgba(255,255,255,0.5);
+    animation: reflection 3s ease-in-out infinite alternate;
+    }
+
+    @keyframes reflection {
+      0% { text-shadow: 0 0 2px rgba(255,255,255,0.4), 0 1px 1px rgba(0,0,0,0.2); }
+      100% { text-shadow: 0 0 8px rgba(255,255,255,0.9), 0 2px 4px rgba(0,0,0,0.3); }
+    }
+
+
     .file-preview img {
       max-width: 200px;
       border-radius: 10px;
