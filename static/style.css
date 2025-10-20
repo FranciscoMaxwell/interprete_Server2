@@ -23,7 +23,7 @@ body {
   100% { background-position: 0% 50%; }
 }
 
-/* Raios suaves ao redor (sol leve) */
+/* Raios suaves (sol pulsante) */
 body::before {
   content: "";
   position: absolute;
@@ -40,28 +40,74 @@ body::before {
   to { opacity: 0.8; transform: scale(1.05); }
 }
 
-/* Título flutuante “semfronteiras” */
+/* --- Título flutuante “semfronteiras” com brilho --- */
 .title {
   position: absolute;
   top: 30px;
   width: 100%;
-  text-align: center;
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.title span {
+  display: inline-block;
   font-size: 38px;
   font-weight: 700;
   color: rgba(0, 0, 0, 0.65);
-  text-shadow: 0 2px 8px rgba(255, 255, 255, 0.6);
-  letter-spacing: 2px;
-  animation: floatTitle 5s ease-in-out infinite;
-  z-index: 2;
   font-family: "Poppins", "Segoe UI", sans-serif;
+  letter-spacing: 2px;
+  text-shadow:
+    0 2px 8px rgba(255, 255, 255, 0.6),
+    0 0 10px rgba(173, 216, 230, 0.7),
+    0 0 20px rgba(30, 64, 175, 0.3);
+  animation: floatLetter 5s ease-in-out infinite;
+  pointer-events: auto;
+  transition: transform 0.3s ease, text-shadow 0.3s ease;
 }
 
-@keyframes floatTitle {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(8px); }
+.title span:hover {
+  transform: translateY(-10px) scale(1.15) rotate(3deg);
+  text-shadow:
+    0 0 25px rgba(255, 255, 255, 1),
+    0 0 60px rgba(255, 255, 150, 0.9),
+    0 0 100px rgba(255, 255, 200, 0.8);
 }
 
-/* Caixa principal do chat */
+@keyframes floatLetter {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  25% { transform: translateY(-6px) rotate(-2deg); }
+  50% { transform: translateY(4px) rotate(2deg); }
+  75% { transform: translateY(-5px) rotate(-1deg); }
+}
+
+/* Reflexo de brilho suave atravessando as letras */
+.title::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -120%;
+  width: 80%;
+  height: 100%;
+  background: linear-gradient(
+    120deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.6) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  animation: shineMove 8s ease-in-out infinite;
+  z-index: 4;
+}
+
+@keyframes shineMove {
+  0%, 70% { transform: translateX(-120%); opacity: 0; }
+  75% { opacity: 1; }
+  100% { transform: translateX(120%); opacity: 0; }
+}
+
+/* --- Caixa principal do chat --- */
 .chat-box {
   background: rgba(255, 255, 255, 0.92);
   border-radius: 20px;
@@ -72,10 +118,10 @@ body::before {
   overflow: hidden;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
   position: relative;
-  z-index: 1;
+  z-index: 2;
 }
 
-/* Nuvens animadas */
+/* --- Nuvens animadas --- */
 .cloud {
   position: absolute;
   background: white;
@@ -120,10 +166,7 @@ body::before {
   scrollbar-color: #cbd5e1 transparent;
 }
 
-/* Personalização da barra de rolagem */
-.chat-messages::-webkit-scrollbar {
-  width: 6px;
-}
+.chat-messages::-webkit-scrollbar { width: 6px; }
 .chat-messages::-webkit-scrollbar-thumb {
   background: #cbd5e1;
   border-radius: 6px;
@@ -146,7 +189,6 @@ body::before {
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* Minhas mensagens */
 .me {
   align-self: flex-end;
   background: #dbeafe;
@@ -154,7 +196,6 @@ body::before {
   border-bottom-right-radius: 4px;
 }
 
-/* Mensagens de outros usuários */
 .other {
   align-self: flex-start;
   background: #dcfce7;
@@ -162,7 +203,6 @@ body::before {
   border-bottom-left-radius: 4px;
 }
 
-/* Mensagens do sistema */
 .system {
   text-align: center;
   color: #64748b;
@@ -170,7 +210,6 @@ body::before {
   margin: 4px 0;
 }
 
-/* Nome de usuário acima das mensagens */
 .username {
   font-size: 13px;
   font-weight: bold;
@@ -178,13 +217,11 @@ body::before {
   color: #334155;
 }
 
-/* Texto original (mais opaco) */
 .original {
   opacity: 0.6;
   font-size: 14px;
 }
 
-/* Texto traduzido (em destaque) */
 .translated {
   font-weight: bold;
   color: #0f172a;
@@ -229,7 +266,6 @@ body::before {
   background: #1e3a8a;
 }
 
-/* Seletor de idioma e nome */
 .lang-select {
   background: #eef2ff;
   padding: 10px;
@@ -264,7 +300,6 @@ body::before {
   background: #1e3a8a;
 }
 
-/* Animação sutil ao clicar */
 button:active {
   transform: scale(0.97);
 }
