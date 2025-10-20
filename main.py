@@ -6,10 +6,8 @@ from gtts import gTTS
 import os, threading, time, uuid
 
 app = FastAPI()
-
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-# Guarda as conexões ativas e idiomas de cada usuário
 connected_users = {}
 
 @app.get("/")
@@ -27,41 +25,46 @@ async def websocket_endpoint(websocket: WebSocket):
         while True:
             data = await websocket.receive_json()
 
-            # Tipo: registro inicial
+            # Registro inicial do idioma
             if data["type"] == "register":
                 connected_users[user_id]["lang"] = data["lang"]
                 await websocket.send_json({
                     "type": "system",
-                    "msg": f"Conectado com idioma {data['lang']} ✅"
+                    "msg": f"✅ Conectado — idioma: {data['lang']}"
                 })
                 continue
 
-            # Tipo: mensagem enviada
+            # Mensagem de chat
             if data["type"] == "message":
-                text = data["text"]
+                text = data["text"].strip()
                 sender_lang = connected_users[user_id]["lang"]
 
-                # Envia para todos os outros usuários conectados
+                # Envia para todos os outros usuários
                 for uid, info in connected_users.items():
+                    if uid == user_id:
+                        continue  # não enviar de volta para o próprio remetente
+
                     target_ws = info["socket"]
                     target_lang = info["lang"]
 
-                    # Traduz texto para o idioma do outro usuário
+                    # Tradução
                     translated = GoogleTranslator(source=sender_lang, target=target_lang).translate(text)
 
-                    # Cria áudio
+                    # Gera áudio na língua do destinatário
                     audio_file = f"static/audio_{uuid.uuid4().hex[:8]}.mp3"
                     tts = gTTS(translated, lang=target_lang)
                     tts.save(audio_file)
 
-                    # Apaga depois de 30s
+                    # Remove depois de 30 segundos
                     threading.Thread(
                         target=lambda f=audio_file: (time.sleep(30), os.remove(f) if os.path.exists(f) else None)
                     ).start()
 
+                    # Envia mensagem formatada (original + tradução)
                     await target_ws.send_json({
                         "type": "translation",
                         "from": sender_lang,
+                        "original": text,
                         "translated": translated,
                         "audio": f"/{audio_file}"
                     })
