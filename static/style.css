@@ -26,7 +26,6 @@ body {
   opacity: 0.8;
   filter: blur(3px);
   animation: float 60s linear infinite;
-  z-index: 0; /* garante que fiquem atrás */
 }
 
 /* Variações de nuvens */
