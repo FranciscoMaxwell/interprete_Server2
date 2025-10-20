@@ -1,0 +1,61 @@
+body {
+  background: linear-gradient(to bottom, #a0c4ff, #cdb4db);
+  font-family: "Segoe UI", Arial, sans-serif;
+  text-align: center;
+  color: #333;
+  margin: 0;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* Fundo animado de nuvens */
+.chat-box {
+  background: rgba(255, 255, 255, 0.8); /* leve transparência */
+  position: relative;
+  overflow: hidden;
+  border-radius: 20px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+/* Nuvens */
+.cloud {
+  z-index: 0;
+  position: absolute;
+  background: white;
+  border-radius: 50%;
+  opacity: 0.8;
+  filter: blur(3px);
+  animation: float 60s linear infinite;
+  z-index: 0; /* garante que fiquem atrás */
+}
+
+/* Variações de nuvens */
+.cloud:nth-child(1) {
+  width: 100px; height: 60px;
+  top: 10%; left: -150px;
+  animation-duration: 80s;
+}
+.cloud:nth-child(2) {
+  width: 150px; height: 80px;
+  top: 30%; left: -200px;
+  animation-duration: 100s;
+}
+.cloud:nth-child(3) {
+  width: 120px; height: 70px;
+  top: 60%; left: -180px;
+  animation-duration: 90s;
+}
+
+@keyframes float {
+  0% { transform: translateX(-250px); }
+  100% { transform: translateX(500px); }
+}
+
+
+.chat-header,
+.lang-select,
+.chat-messages,
+.chat-input {
+  position: relative;
+  z-index: 1;
+}
