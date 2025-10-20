@@ -148,6 +148,35 @@ body::before {
   color: #334155;
 }
 
+/* --- EFEITO REFLETIDO --- */
+.username.reflected {
+  font-weight: bold;
+  color: #fff;
+  text-align: center;
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.6);
+  position: relative;
+  display: inline-block;
+  animation: glow 3s ease-in-out infinite alternate;
+}
+
+.username.reflected::after {
+  content: attr(data-text);
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  opacity: 0.3;
+  transform: scaleY(-1);
+  color: #fff;
+  text-shadow: none;
+  filter: blur(2px);
+}
+
+@keyframes glow {
+  from { text-shadow: 0 0 5px rgba(255,255,255,0.3); }
+  to { text-shadow: 0 0 15px rgba(255,255,255,0.8); }
+}
+
 /* --- Mensagens com arquivos --- */
 .msg .file-preview {
   margin-top: 8px;

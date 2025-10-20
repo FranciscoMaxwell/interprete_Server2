@@ -3,7 +3,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from deep_translator import GoogleTranslator
 from gtts import gTTS
-import os, threading, time, uuid, base64
+import os, threading, time, uuid, base64, io
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -65,7 +65,7 @@ async def handle_text_message(user_id, text):
     sender_lang = sender["lang"]
     sender_name = sender["name"]
 
-    for uid, info in connected_users.items():
+    for uid, info in list(connected_users.items()):
         if uid == user_id:
             continue  # não envia para si mesmo
 
@@ -73,28 +73,47 @@ async def handle_text_message(user_id, text):
         target_lang = info["lang"]
 
         # Tradução automática
-        translated = GoogleTranslator(source=sender_lang, target=target_lang).translate(text)
+        try:
+            translated = GoogleTranslator(source=sender_lang, target=target_lang).translate(text)
+        except Exception as e:
+            print("Erro na tradução:", e)
+            translated = text
 
-        # Gera áudio no idioma do destinatário
-        audio_file = f"static/audio_{uuid.uuid4().hex[:8]}.mp3"
+        # --- Gera áudio em memória (data URL) ---
+        audio_data_url = None
         try:
             tts = gTTS(translated, lang=target_lang)
-            tts.save(audio_file)
+            bio = io.BytesIO()
+            tts.write_to_fp(bio)
+            bio.seek(0)
+            audio_b64 = base64.b64encode(bio.read()).decode("utf-8")
+            audio_data_url = f"data:audio/mp3;base64,{audio_b64}"
+        except Exception as e:
+            print("⚠️ Erro ao gerar áudio:", e)
+            audio_data_url = None
 
-            # Remove o arquivo depois de 30 segundos
-            threading.Thread(
-                target=lambda f=audio_file: (time.sleep(30), os.remove(f) if os.path.exists(f) else None)
-            ).start()
-        except Exception:
+        # --- Mantém compatibilidade com o antigo sistema de arquivos ---
+        audio_file = f"static/audio_{uuid.uuid4().hex[:8]}.mp3"
+        try:
+            if audio_data_url:
+                with open(audio_file, "wb") as f:
+                    header, b64 = audio_data_url.split(",", 1)
+                    f.write(base64.b64decode(b64))
+                threading.Thread(
+                    target=lambda f=audio_file: (time.sleep(30), os.remove(f) if os.path.exists(f) else None)
+                ).start()
+        except Exception as e:
+            print("Erro ao salvar áudio:", e)
             audio_file = None
 
-        # Envia tradução
+        # --- Envia tradução + áudio ---
         await target_ws.send_json({
             "type": "translation",
             "from": sender_lang,
             "original": text,
             "translated": translated,
             "audio": f"/{audio_file}" if audio_file else None,
+            "audio_data": audio_data_url,
             "name": sender_name
         })
 

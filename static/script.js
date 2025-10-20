@@ -16,7 +16,7 @@ function connect() {
     ws.send(JSON.stringify({ type: "register", lang: myLang, name: username }));
     addSystemMessage(`✅ Conectado como ${username} (${myLang.toUpperCase()})`);
 
-    // Mantém conexão viva
+    // Mantém a conexão viva
     setInterval(() => {
       if (ws.readyState === WebSocket.OPEN) {
         ws.send(JSON.stringify({ type: "ping" }));
@@ -28,30 +28,22 @@ function connect() {
     const data = JSON.parse(event.data);
 
     if (data.type === "translation") {
-      // Mensagens de texto
-      if (data.file) {
-        // Mensagem com arquivo
-        addFileMessage(data.name, data.file, data.fileName, data.mimeType, "other");
+      // Mostra a mensagem traduzida
+      if (data.original.trim().toLowerCase() === data.translated.trim().toLowerCase()) {
+        addMessage(data.name, data.original, null, "other");
       } else {
-        if (data.original.trim().toLowerCase() === data.translated.trim().toLowerCase()) {
-          addMessage(data.name, data.original, null, "other");
-        } else {
-          addMessage(data.name, data.original, data.translated, "other");
-        }
+        addMessage(data.name, data.original, data.translated, "other");
       }
 
-      // Áudio de tradução automática
-      if (data.audio && data.lang === myLang) {
+      // 🔊 Toca o áudio da tradução automaticamente
+      if (data.audio) {
         const audio = new Audio(data.audio);
         audio.volume = 1.0;
-        audio.addEventListener("canplaythrough", () => {
-          audio.play().catch(err => console.warn("Falha ao tocar áudio:", err));
-        });
+        audio.play().catch(err => console.warn("Falha ao tocar áudio:", err));
       }
 
     } else if (data.type === "file") {
-      // Arquivo direto sem tradução
-      addFileMessage(data.name, data.file, data.fileName, data.mimeType, "other");
+      addFileMessage(data.name, data.file_url, data.file_name, data.mime, "other");
     } else if (data.type === "system") {
       addSystemMessage(data.msg);
     }
@@ -60,7 +52,7 @@ function connect() {
   ws.onclose = () => addSystemMessage("❌ Conexão encerrada.");
 }
 
-/* === Envio de mensagens de texto === */
+/* === Envio de mensagens === */
 function sendMessage() {
   const input = document.getElementById("message");
   const msg = input.value.trim();
@@ -88,9 +80,9 @@ function sendFile(event) {
       ws.send(JSON.stringify({
         type: "file",
         name: username,
-        file: base64,
+        data: base64,
         fileName: file.name,
-        mimeType: file.type
+        mime: file.type
       }));
       addFileMessage(username, base64, file.name, file.type, "me");
     } else {
@@ -126,13 +118,14 @@ function mapLang(code) {
   return map[code] || "en-US";
 }
 
-/* === Exibe mensagens de texto === */
+/* === Mensagens de texto === */
 function addMessage(name, original, translated, who) {
   const container = document.getElementById("messages");
   const div = document.createElement("div");
   div.className = "msg " + who;
 
-  const nameTag = `<div class="username"><strong>${name}</strong></div>`;
+  // 💎 Nome com negrito e reflexo
+  const nameTag = `<div class="username reflected"><strong>${name}</strong></div>`;
 
   if (who === "me") {
     div.innerHTML = `${nameTag}<strong>${original}</strong>`;
@@ -152,13 +145,13 @@ function addMessage(name, original, translated, who) {
   container.scrollTop = container.scrollHeight;
 }
 
-/* === Exibe mensagens de arquivos === */
+/* === Mensagens de arquivos === */
 function addFileMessage(name, base64, fileName, mimeType, who) {
   const container = document.getElementById("messages");
   const div = document.createElement("div");
   div.className = "msg " + who;
 
-  const nameTag = `<div class="username">${name}</div>`;
+  const nameTag = `<div class="username reflected"><strong>${name}</strong></div>`;
   let content = "";
 
   if (mimeType.startsWith("image/")) {
