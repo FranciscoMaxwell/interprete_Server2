@@ -121,21 +121,23 @@ async def handle_text_message(user_id, text):
 # -------------------------------------------------------------------
 # 📁 LIDA COM ENVIO DE ARQUIVOS (IMAGENS, VÍDEOS, ETC.)
 # -------------------------------------------------------------------
+# -------------------------------------------------------------------
+# 📁 LIDA COM ENVIO DE ARQUIVOS (IMAGENS, VÍDEOS, ÁUDIOS, ETC.) — com id
+# -------------------------------------------------------------------
 async def handle_file_message(user_id, data):
     sender = connected_users[user_id]
     sender_name = sender["name"]
 
-    # ✅ Corrige nomes vindos do JavaScript
+    # aceitar os campos enviados pelo JS
     file_name = data.get("fileName", f"arquivo_{uuid.uuid4().hex[:6]}")
     mime_type = data.get("mimeType", "application/octet-stream")
     base64_data = data.get("file")  # vem como dataURL: data:image/png;base64,...
 
-    # Cria pasta
+    # criar pasta e salvar
     os.makedirs("static/uploads", exist_ok=True)
     file_ext = os.path.splitext(file_name)[1] or ".bin"
     file_path = f"static/uploads/{uuid.uuid4().hex[:8]}{file_ext}"
 
-    # Decodifica e salva o arquivo
     try:
         header, encoded = base64_data.split(",", 1)
         with open(file_path, "wb") as f:
@@ -144,16 +146,21 @@ async def handle_file_message(user_id, data):
         print("Erro ao salvar arquivo:", e)
         return
 
-    # Envia para todos os usuários conectados (menos quem enviou)
+    # id único para o arquivo (para deduplicação)
+    msg_id = uuid.uuid4().hex
+
+    # Envia para todos os outros (não para o remetente)
     for uid, info in list(connected_users.items()):
         try:
-            if uid != user_id:
-                await info["socket"].send_json({
-                    "type": "file",
-                    "name": sender_name,
-                    "file": f"/{file_path}",
-                    "fileName": file_name,
-                    "mimeType": mime_type
-                })
+            if uid == user_id:
+                continue
+            await info["socket"].send_json({
+                "type": "file",
+                "id": msg_id,
+                "name": sender_name,
+                "file": f"/{file_path}",
+                "fileName": file_name,
+                "mimeType": mime_type
+            })
         except Exception as e:
-            print("Erro ao enviar arquivo:", e)
+            print("Erro ao enviar arquivo para", uid, ":", e)
