@@ -125,15 +125,17 @@ async def handle_file_message(user_id, data):
     sender = connected_users[user_id]
     sender_name = sender["name"]
 
+    # ✅ Corrige nomes vindos do JavaScript
     file_name = data.get("fileName", f"arquivo_{uuid.uuid4().hex[:6]}")
-    mime = data.get("mime", "application/octet-stream")
-    base64_data = data.get("data")
+    mime_type = data.get("mimeType", "application/octet-stream")
+    base64_data = data.get("file")  # vem como dataURL: data:image/png;base64,...
 
-    # Decodifica base64 e salva o arquivo em static/uploads/
+    # Cria pasta
     os.makedirs("static/uploads", exist_ok=True)
     file_ext = os.path.splitext(file_name)[1] or ".bin"
     file_path = f"static/uploads/{uuid.uuid4().hex[:8]}{file_ext}"
 
+    # Decodifica e salva o arquivo
     try:
         header, encoded = base64_data.split(",", 1)
         with open(file_path, "wb") as f:
@@ -142,15 +144,16 @@ async def handle_file_message(user_id, data):
         print("Erro ao salvar arquivo:", e)
         return
 
-    # Envia o link do arquivo a todos os usuários conectados
-    for uid, info in connected_users.items():
+    # Envia para todos os usuários conectados (menos quem enviou)
+    for uid, info in list(connected_users.items()):
         try:
-            await info["socket"].send_json({
-                "type": "file",
-                "name": sender_name,
-                "file_name": file_name,
-                "file_url": f"/{file_path}",
-                "mime": mime
-            })
+            if uid != user_id:
+                await info["socket"].send_json({
+                    "type": "file",
+                    "name": sender_name,
+                    "file": f"/{file_path}",
+                    "fileName": file_name,
+                    "mimeType": mime_type
+                })
         except Exception as e:
             print("Erro ao enviar arquivo:", e)
