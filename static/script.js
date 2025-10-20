@@ -28,18 +28,26 @@ function connect() {
     const data = JSON.parse(event.data);
 
     if (data.type === "translation") {
-      // Evita mostrar duplicado se o texto original for idêntico à tradução
-      if (data.original.trim().toLowerCase() === data.translated.trim().toLowerCase()) {
-        addMessage(data.name, data.original, null, "other");
+      // Mensagens de texto
+      if (data.file) {
+        // Mensagem com arquivo
+        addFileMessage(data.name, data.file, data.fileName, data.mimeType, "other");
       } else {
-        addMessage(data.name, data.original, data.translated, "other");
+        if (data.original.trim().toLowerCase() === data.translated.trim().toLowerCase()) {
+          addMessage(data.name, data.original, null, "other");
+        } else {
+          addMessage(data.name, data.original, data.translated, "other");
+        }
       }
 
-      // Toca o áudio apenas se o idioma for o do usuário
+      // Áudio de tradução automática
       if (data.audio && data.lang === myLang) {
         const audio = new Audio(data.audio);
         audio.play().catch(() => {});
       }
+    } else if (data.type === "file") {
+      // Arquivo direto sem tradução
+      addFileMessage(data.name, data.file, data.fileName, data.mimeType, "other");
     } else if (data.type === "system") {
       addSystemMessage(data.msg);
     }
@@ -48,6 +56,7 @@ function connect() {
   ws.onclose = () => addSystemMessage("❌ Conexão encerrada.");
 }
 
+/* === Envio de mensagens de texto === */
 function sendMessage() {
   const input = document.getElementById("message");
   const msg = input.value.trim();
@@ -62,6 +71,32 @@ function sendMessage() {
   }
 }
 
+/* === Envio de arquivos === */
+function sendFile(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = () => {
+    const base64 = reader.result;
+
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({
+        type: "file",
+        name: username,
+        file: base64,
+        fileName: file.name,
+        mimeType: file.type
+      }));
+      addFileMessage(username, base64, file.name, file.type, "me");
+    } else {
+      alert("Conecte primeiro!");
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+/* === Reconhecimento de voz === */
 function startListening() {
   const rec = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
   rec.lang = mapLang(myLang);
@@ -87,7 +122,7 @@ function mapLang(code) {
   return map[code] || "en-US";
 }
 
-// Exibe mensagens no chat
+/* === Exibe mensagens de texto === */
 function addMessage(name, original, translated, who) {
   const container = document.getElementById("messages");
   const div = document.createElement("div");
@@ -113,7 +148,36 @@ function addMessage(name, original, translated, who) {
   container.scrollTop = container.scrollHeight;
 }
 
-// Exibe mensagens do sistema
+/* === Exibe mensagens de arquivos === */
+function addFileMessage(name, base64, fileName, mimeType, who) {
+  const container = document.getElementById("messages");
+  const div = document.createElement("div");
+  div.className = "msg " + who;
+
+  const nameTag = `<div class="username">${name}</div>`;
+  let content = "";
+
+  if (mimeType.startsWith("image/")) {
+    content = `<div class="file-preview"><img src="${base64}" alt="${fileName}"></div>`;
+  } else if (mimeType.startsWith("video/")) {
+    content = `<div class="file-preview"><video controls src="${base64}"></video></div>`;
+  } else if (mimeType.startsWith("audio/")) {
+    content = `<div class="file-preview"><audio controls src="${base64}"></audio></div>`;
+  } else {
+    content = `
+      <div class="file-preview">
+        📎 ${fileName}<br>
+        <a href="${base64}" download="${fileName}" class="download-btn">Baixar</a>
+      </div>
+    `;
+  }
+
+  div.innerHTML = `${nameTag}${content}`;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+/* === Mensagem do sistema === */
 function addSystemMessage(text) {
   const div = document.createElement("div");
   div.className = "msg system";

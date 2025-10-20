@@ -3,7 +3,6 @@
 <head>
   <meta charset="UTF-8" />
   <title>🌍 Intérprete Automático — Chat Bilíngue</title>
-  <link rel="stylesheet" href="/static/style.css">
   <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
 
   <style>
@@ -19,7 +18,7 @@
       position: relative;
     }
 
-    /* --- ANIMAÇÃO DO SOL E RAIOS --- */
+    /* Sol suave */
     .sun {
       position: absolute;
       top: -100px;
@@ -33,102 +32,11 @@
     }
 
     @keyframes sunGlow {
-      0% { opacity: 0.7; transform: scale(1); }
-      100% { opacity: 1; transform: scale(1.1); }
+      0% { opacity: 0.6; transform: scale(1); }
+      100% { opacity: 0.9; transform: scale(1.1); }
     }
 
-    /* --- TÍTULO FLUTUANTE --- */
-    .title {
-      position: absolute;
-      top: 40px;
-      width: 100%;
-      text-align: center;
-      font-size: 48px;
-      font-weight: 800;
-      color: #ffffff;
-      letter-spacing: 4px;
-      z-index: 5;
-      display: flex;
-      justify-content: center;
-      gap: 6px;
-      pointer-events: none;
-      overflow: hidden;
-    }
-
-    .title span {
-      display: inline-block;
-      position: relative;
-      text-shadow: 
-        0 0 15px rgba(255, 255, 255, 0.8),
-        0 0 40px rgba(173, 216, 230, 0.9),
-        0 0 60px rgba(30, 64, 175, 0.6);
-      animation: floatLetter 5s ease-in-out infinite;
-      transition: transform 0.3s ease, text-shadow 0.3s ease;
-      pointer-events: auto;
-      cursor: default;
-    }
-
-    @keyframes floatLetter {
-      0%, 100% { transform: translateY(0px) rotate(0deg); }
-      25% { transform: translateY(-6px) rotate(-3deg); }
-      50% { transform: translateY(3px) rotate(2deg); }
-      75% { transform: translateY(-4px) rotate(-1deg); }
-    }
-
-    .title span:hover {
-      transform: translateY(-20px) scale(1.2) rotate(3deg);
-      text-shadow:
-        0 0 25px rgba(255, 255, 255, 1),
-        0 0 60px rgba(255, 255, 150, 0.9),
-        0 0 100px rgba(255, 255, 200, 0.8);
-    }
-
-    /* --- REFLEXO DE LUZ --- */
-    .shine {
-      position: absolute;
-      top: 0;
-      left: -100%;
-      width: 80%;
-      height: 100%;
-      background: linear-gradient(
-        120deg,
-        rgba(255, 255, 255, 0) 0%,
-        rgba(255, 255, 255, 0.7) 50%,
-        rgba(255, 255, 255, 0) 100%
-      );
-      animation: shineMove 8s ease-in-out infinite;
-      z-index: 6;
-    }
-
-    @keyframes shineMove {
-      0%, 70% { transform: translateX(-120%); opacity: 0; }
-      75% { opacity: 1; }
-      100% { transform: translateX(120%); opacity: 0; }
-    }
-
-    /* Mensagem do sistema */
-    .system {
-      text-align: center;
-      color: #64748b;
-      font-size: 13px;
-      margin: 6px 0;
-    }
-
-    /* Container principal */
-    .chat-box {
-      background: rgba(255, 255, 255, 0.9);
-      border-radius: 20px;
-      width: 400px;
-      height: 600px;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-      box-shadow: 0 10px 40px rgba(0,0,0,0.25);
-      position: relative;
-      z-index: 2;
-    }
-
-    /* Fundo animado — nuvens */
+    /* Fundo animado (nuvens) */
     .cloud {
       position: absolute;
       background: white;
@@ -136,42 +44,91 @@
       opacity: 0.8;
       filter: blur(4px);
       z-index: 1;
-      animation: float 60s linear infinite;
+      animation: float 80s linear infinite;
     }
 
     .cloud:nth-child(1) {
-      width: 120px; height: 60px;
-      top: 10%; left: -150px;
-      animation-duration: 80s;
+      width: 160px; height: 80px;
+      top: 15%; left: -200px;
+      animation-duration: 90s;
     }
     .cloud:nth-child(2) {
-      width: 160px; height: 80px;
-      top: 40%; left: -200px;
-      animation-duration: 100s;
+      width: 200px; height: 100px;
+      top: 45%; left: -250px;
+      animation-duration: 110s;
     }
     .cloud:nth-child(3) {
-      width: 130px; height: 70px;
+      width: 150px; height: 75px;
       top: 70%; left: -180px;
-      animation-duration: 90s;
+      animation-duration: 100s;
     }
 
     @keyframes float {
       0% { transform: translateX(-250px); }
-      100% { transform: translateX(600px); }
+      100% { transform: translateX(800px); }
+    }
+
+    /* Caixa de chat maior */
+    .chat-box {
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 22px;
+      width: 500px;
+      height: 700px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 10px 50px rgba(0,0,0,0.3);
+      position: relative;
+      z-index: 2;
     }
 
     /* Cabeçalho */
     .chat-header {
-      background: #2563eb;
+      background: linear-gradient(90deg, #2563eb, #1e40af);
       color: white;
       text-align: center;
-      padding: 15px;
-      font-weight: bold;
-      z-index: 3;
+      padding: 18px;
+      font-weight: 700;
+      font-size: 20px;
+      letter-spacing: 1px;
       position: relative;
+      z-index: 3;
     }
 
-    /* Área de mensagens */
+    /* Área de seleção */
+    .lang-select {
+      background: #eef2ff;
+      padding: 14px;
+      text-align: center;
+      position: relative;
+      z-index: 3;
+    }
+
+    .lang-select input, .lang-select select {
+      margin: 6px 0;
+      padding: 8px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 15px;
+    }
+
+    .lang-select button {
+      background: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 16px;
+      cursor: pointer;
+      transition: 0.2s;
+      margin-top: 8px;
+      font-size: 15px;
+    }
+
+    .lang-select button:hover {
+      background: #1e3a8a;
+    }
+
+    /* Mensagens */
     .chat-messages {
       flex: 1;
       padding: 15px;
@@ -189,6 +146,7 @@
       max-width: 80%;
       word-wrap: break-word;
       animation: fadeIn 0.3s ease;
+      font-size: 15px;
     }
 
     @keyframes fadeIn {
@@ -210,8 +168,10 @@
       border-bottom-left-radius: 4px;
     }
 
+    /* Entrada de mensagem */
     .chat-input {
       display: flex;
+      align-items: center;
       padding: 10px;
       background: #f9fafb;
       border-top: 1px solid #e5e7eb;
@@ -235,64 +195,54 @@
       padding: 10px 14px;
       cursor: pointer;
       transition: 0.2s;
+      margin-left: 4px;
     }
 
     .chat-input button:hover {
       background: #1e3a8a;
     }
 
-    .lang-select {
-      background: #eef2ff;
-      padding: 10px;
-      text-align: center;
-      z-index: 3;
-      position: relative;
+    /* Arquivos enviados */
+    .file-msg {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
     }
 
-    .lang-select input, .lang-select select {
-      margin: 4px 0;
-      padding: 6px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-      font-size: 14px;
+    .file-preview img {
+      max-width: 200px;
+      border-radius: 10px;
     }
 
-    .lang-select button {
-      background: #2563eb;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      padding: 8px 14px;
-      cursor: pointer;
-      transition: 0.2s;
-      margin-top: 6px;
+    .file-preview video {
+      max-width: 240px;
+      border-radius: 10px;
     }
 
-    .lang-select button:hover {
-      background: #1e3a8a;
+    .file-download {
+      text-decoration: none;
+      color: #2563eb;
+      font-weight: 600;
+      margin-top: 4px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .file-download:hover {
+      text-decoration: underline;
     }
   </style>
 </head>
 
 <body>
-  <!-- Sol e raios -->
   <div class="sun"></div>
 
-  <!-- Título flutuante interativo com brilho -->
-  <div class="title">
-    <span>s</span><span>e</span><span>m</span>
-    <span>f</span><span>r</span><span>o</span>
-    <span>n</span><span>t</span><span>e</span>
-    <span>i</span><span>r</span><span>a</span><span>s</span>
-    <div class="shine"></div>
-  </div>
+  <div class="cloud"></div>
+  <div class="cloud"></div>
+  <div class="cloud"></div>
 
   <div class="chat-box">
-    <!-- Fundo de nuvens animadas -->
-    <div class="cloud"></div>
-    <div class="cloud"></div>
-    <div class="cloud"></div>
-
     <div class="chat-header">🌍 Intérprete Bilíngue</div>
 
     <div class="lang-select">
@@ -319,6 +269,8 @@
       <input id="message" type="text" placeholder="Digite ou fale..." />
       <button onclick="sendMessage()">Enviar</button>
       <button onclick="startListening()">🎤</button>
+      <button onclick="document.getElementById('fileInput').click()">📎</button>
+      <input id="fileInput" type="file" style="display:none" onchange="sendFile(event)" />
     </div>
   </div>
 
