@@ -18,31 +18,37 @@ async def home():
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
     user_id = uuid.uuid4().hex[:8]
-    connected_users[user_id] = {"socket": websocket, "lang": "en"}
+    connected_users[user_id] = {"socket": websocket, "lang": "en", "name": "Usuário"}
     print(f"🔗 Usuário {user_id} conectado")
 
     try:
         while True:
             data = await websocket.receive_json()
 
-            # Registro inicial do idioma
+            # Registro inicial do idioma e nome
             if data["type"] == "register":
-                connected_users[user_id]["lang"] = data["lang"]
+                connected_users[user_id]["lang"] = data.get("lang", "en")
+                connected_users[user_id]["name"] = data.get("name", f"User-{user_id[:4]}")
                 await websocket.send_json({
                     "type": "system",
-                    "msg": f"✅ Conectado — idioma: {data['lang']}"
+                    "msg": f"✅ Conectado como {connected_users[user_id]['name']} ({connected_users[user_id]['lang']})"
                 })
+                continue
+
+            # Ping para manter conexão
+            if data["type"] == "ping":
                 continue
 
             # Mensagem de chat
             if data["type"] == "message":
                 text = data["text"].strip()
                 sender_lang = connected_users[user_id]["lang"]
+                sender_name = connected_users[user_id]["name"]
 
                 # Envia para todos os outros usuários
                 for uid, info in connected_users.items():
                     if uid == user_id:
-                        continue  # não enviar de volta para o próprio remetente
+                        continue  # não enviar para si mesmo
 
                     target_ws = info["socket"]
                     target_lang = info["lang"]
@@ -55,18 +61,19 @@ async def websocket_endpoint(websocket: WebSocket):
                     tts = gTTS(translated, lang=target_lang)
                     tts.save(audio_file)
 
-                    # Remove depois de 30 segundos
+                    # Remove áudio após 30 segundos
                     threading.Thread(
                         target=lambda f=audio_file: (time.sleep(30), os.remove(f) if os.path.exists(f) else None)
                     ).start()
 
-                    # Envia mensagem formatada (original + tradução)
+                    # Envia mensagem
                     await target_ws.send_json({
                         "type": "translation",
                         "from": sender_lang,
                         "original": text,
                         "translated": translated,
-                        "audio": f"/{audio_file}"
+                        "audio": f"/{audio_file}",
+                        "name": sender_name
                     })
 
     except WebSocketDisconnect:

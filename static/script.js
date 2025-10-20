@@ -16,7 +16,7 @@ function connect() {
     ws.send(JSON.stringify({ type: "register", lang: myLang, name: username }));
     addSystemMessage(`✅ Conectado como ${username} (${myLang.toUpperCase()})`);
 
-    // Mantém conexão ativa
+    // Mantém conexão viva
     setInterval(() => {
       if (ws.readyState === WebSocket.OPEN) {
         ws.send(JSON.stringify({ type: "ping" }));
@@ -28,13 +28,17 @@ function connect() {
     const data = JSON.parse(event.data);
 
     if (data.type === "translation") {
-      // Mostra: original / tradução (traduzido em destaque)
-      addMessage(data.name, data.original, data.translated, "other");
+      // Evita mostrar duplicado se o texto original for idêntico à tradução
+      if (data.original.trim().toLowerCase() === data.translated.trim().toLowerCase()) {
+        addMessage(data.name, data.original, null, "other");
+      } else {
+        addMessage(data.name, data.original, data.translated, "other");
+      }
 
-      // Toca áudio da tradução (somente para quem precisa ouvir)
+      // Toca o áudio apenas se o idioma for o do usuário
       if (data.audio && data.lang === myLang) {
         const audio = new Audio(data.audio);
-        audio.play();
+        audio.play().catch(() => {});
       }
     } else if (data.type === "system") {
       addSystemMessage(data.msg);
@@ -94,12 +98,15 @@ function addMessage(name, original, translated, who) {
   if (who === "me") {
     div.innerHTML = `${nameTag}<strong>${original}</strong>`;
   } else {
-    // original mais opaco, tradução em destaque
-    div.innerHTML = `
-      ${nameTag}
-      <span class="original">${original}</span><br>
-      <span class="translated">${translated}</span>
-    `;
+    if (translated) {
+      div.innerHTML = `
+        ${nameTag}
+        <span class="original">${original}</span><br>
+        <span class="translated"><strong>${translated}</strong></span>
+      `;
+    } else {
+      div.innerHTML = `${nameTag}<strong>${original}</strong>`;
+    }
   }
 
   container.appendChild(div);
@@ -112,5 +119,6 @@ function addSystemMessage(text) {
   div.className = "msg system";
   div.textContent = text;
   document.getElementById("messages").appendChild(div);
-  document.getElementById("messages").scrollTop = document.getElementById("messages").scrollHeight;
+  document.getElementById("messages").scrollTop =
+    document.getElementById("messages").scrollHeight;
 }

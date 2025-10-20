@@ -11,9 +11,9 @@ body {
   align-items: center;
 }
 
-/* Fundo animado de nuvens */
+/* Caixa principal do chat */
 .chat-box {
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.92);
   border-radius: 20px;
   width: 400px;
   height: 600px;
@@ -25,13 +25,13 @@ body {
   z-index: 1;
 }
 
-/* Nuvens animadas */
+/* Fundo animado — nuvens */
 .cloud {
   position: absolute;
   background: white;
   border-radius: 50%;
-  opacity: 0.8;
-  filter: blur(4px);
+  opacity: 0.75;
+  filter: blur(5px);
   z-index: 0;
   animation: float 60s linear infinite;
 }
@@ -45,7 +45,7 @@ body {
   100% { transform: translateX(600px); }
 }
 
-/* Cabeçalho */
+/* Cabeçalho do chat */
 .chat-header {
   background: #2563eb;
   color: white;
@@ -54,9 +54,10 @@ body {
   font-weight: bold;
   z-index: 2;
   position: relative;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
 }
 
-/* Área de mensagens */
+/* Área das mensagens */
 .chat-messages {
   flex: 1;
   padding: 15px;
@@ -65,16 +66,29 @@ body {
   display: flex;
   flex-direction: column;
   z-index: 2;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
 }
 
+/* Personalização da barra de rolagem */
+.chat-messages::-webkit-scrollbar {
+  width: 6px;
+}
+.chat-messages::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 6px;
+}
+
+/* Bolhas de mensagem */
 .msg {
-  margin: 8px 0;
+  margin: 10px 0;
   padding: 10px 14px;
   border-radius: 18px;
   max-width: 80%;
   word-wrap: break-word;
   animation: fadeIn 0.3s ease;
   text-align: left;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
 }
 
 @keyframes fadeIn {
@@ -82,6 +96,7 @@ body {
   to { opacity: 1; transform: translateY(0); }
 }
 
+/* Minhas mensagens */
 .me {
   align-self: flex-end;
   background: #dbeafe;
@@ -89,6 +104,7 @@ body {
   border-bottom-right-radius: 4px;
 }
 
+/* Mensagens de outros usuários */
 .other {
   align-self: flex-start;
   background: #dcfce7;
@@ -96,30 +112,36 @@ body {
   border-bottom-left-radius: 4px;
 }
 
+/* Mensagens do sistema */
 .system {
   text-align: center;
-  color: #666;
+  color: #64748b;
   font-size: 13px;
+  margin: 4px 0;
 }
 
+/* Nome de usuário acima das mensagens */
 .username {
   font-size: 13px;
   font-weight: bold;
-  margin-bottom: 3px;
+  margin-bottom: 4px;
   color: #334155;
 }
 
+/* Texto original (mais opaco) */
 .original {
   opacity: 0.6;
   font-size: 14px;
 }
 
+/* Texto traduzido (em destaque) */
 .translated {
   font-weight: bold;
   color: #0f172a;
+  font-size: 15px;
 }
 
-/* Campo de entrada */
+/* Campo de entrada e botões */
 .chat-input {
   display: flex;
   padding: 10px;
@@ -135,6 +157,12 @@ body {
   border-radius: 12px;
   font-size: 15px;
   margin-right: 8px;
+  transition: 0.2s;
+}
+
+.chat-input input:focus {
+  border-color: #2563eb;
+  outline: none;
 }
 
 .chat-input button {
@@ -151,20 +179,24 @@ body {
   background: #1e3a8a;
 }
 
+/* Seletor de idioma e nome */
 .lang-select {
   background: #eef2ff;
   padding: 10px;
   text-align: center;
   z-index: 2;
   position: relative;
+  border-bottom: 1px solid #c7d2fe;
 }
 
-.lang-select input, .lang-select select {
-  margin: 4px 0;
+.lang-select input, 
+.lang-select select {
+  margin: 5px 0;
   padding: 6px;
   border-radius: 6px;
   border: 1px solid #ccc;
   font-size: 14px;
+  width: 90%;
 }
 
 .lang-select button {
@@ -180,4 +212,9 @@ body {
 
 .lang-select button:hover {
   background: #1e3a8a;
+}
+
+/* Animação sutil ao passar o mouse */
+button:active {
+  transform: scale(0.97);
 }
