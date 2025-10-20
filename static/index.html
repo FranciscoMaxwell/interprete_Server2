@@ -18,14 +18,13 @@
       overflow: hidden;
     }
 
-
+    /* Mensagem do sistema */
     .system {
-    text-align: center;
-    color: #64748b;
-    font-size: 13px;
-    
+      text-align: center;
+      color: #64748b;
+      font-size: 13px;
+      margin: 6px 0;
     }
-
 
     /* Container principal */
     .chat-box {
@@ -73,6 +72,7 @@
       100% { transform: translateX(600px); }
     }
 
+    /* Cabeçalho */
     .chat-header {
       background: #2563eb;
       color: white;
@@ -83,6 +83,7 @@
       position: relative;
     }
 
+    /* Área de mensagens */
     .chat-messages {
       flex: 1;
       padding: 15px;
@@ -99,6 +100,12 @@
       border-radius: 18px;
       max-width: 80%;
       word-wrap: break-word;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(5px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
     .me {
@@ -113,12 +120,6 @@
       background: #dcfce7;
       color: #14532d;
       border-bottom-left-radius: 4px;
-    }
-
-    .system {
-      text-align: center;
-      color: #666;
-      font-size: 13px;
     }
 
     .chat-input {
@@ -160,13 +161,31 @@
       position: relative;
     }
 
-    .lang-select select {
+    .lang-select input, .lang-select select {
+      margin: 4px 0;
       padding: 6px;
       border-radius: 6px;
+      border: 1px solid #ccc;
       font-size: 14px;
+    }
+
+    .lang-select button {
+      background: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 14px;
+      cursor: pointer;
+      transition: 0.2s;
+      margin-top: 6px;
+    }
+
+    .lang-select button:hover {
+      background: #1e3a8a;
     }
   </style>
 </head>
+
 <body>
   <div class="chat-box">
     <!-- Fundo de nuvens animadas -->
@@ -177,16 +196,20 @@
     <div class="chat-header">🌍 Intérprete Bilíngue</div>
 
     <div class="lang-select">
-      <label>Meu idioma:</label>
+      <label for="username">Meu nome:</label><br>
+      <input id="username" type="text" placeholder="Digite seu nome" maxlength="20" /><br>
+
+      <label for="myLang">Meu idioma:</label><br>
       <select id="myLang">
-        <option value="pt">Português</option>
-        <option value="en">Inglês</option>
-        <option value="es">Espanhol</option>
-        <option value="fr">Francês</option>
-        <option value="de">Alemão</option>
-        <option value="it">Italiano</option>
-        <option value="ja">Japonês</option>
+        <option value="pt">Português 🇧🇷</option>
+        <option value="en">Inglês 🇺🇸</option>
+        <option value="es">Espanhol 🇪🇸</option>
+        <option value="fr">Francês 🇫🇷</option>
+        <option value="de">Alemão 🇩🇪</option>
+        <option value="it">Italiano 🇮🇹</option>
+        <option value="ja">Japonês 🇯🇵</option>
       </select>
+      <br>
       <button onclick="connect()">Conectar</button>
     </div>
 

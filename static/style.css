@@ -1,59 +1,183 @@
 body {
-  background: linear-gradient(to bottom, #a0c4ff, #cdb4db);
+  background: linear-gradient(135deg, #4f46e5, #3b82f6);
   font-family: "Segoe UI", Arial, sans-serif;
   text-align: center;
   color: #333;
   margin: 0;
   height: 100vh;
   overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 /* Fundo animado de nuvens */
 .chat-box {
-  background: rgba(255, 255, 255, 0.8);
-  position: relative;
-  overflow: hidden;
+  background: rgba(255, 255, 255, 0.9);
   border-radius: 20px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  width: 400px;
+  height: 600px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
+  position: relative;
+  z-index: 1;
 }
 
-/* Nuvens */
+/* Nuvens animadas */
 .cloud {
-  z-index: 0;
   position: absolute;
   background: white;
   border-radius: 50%;
   opacity: 0.8;
-  filter: blur(3px);
+  filter: blur(4px);
+  z-index: 0;
   animation: float 60s linear infinite;
 }
 
-/* Variações de nuvens */
-.cloud:nth-child(1) {
-  width: 100px; height: 60px;
-  top: 10%; left: -150px;
-  animation-duration: 80s;
-}
-.cloud:nth-child(2) {
-  width: 150px; height: 80px;
-  top: 30%; left: -200px;
-  animation-duration: 100s;
-}
-.cloud:nth-child(3) {
-  width: 120px; height: 70px;
-  top: 60%; left: -180px;
-  animation-duration: 90s;
-}
+.cloud:nth-child(1) { width: 120px; height: 60px; top: 10%; left: -150px; animation-duration: 80s; }
+.cloud:nth-child(2) { width: 160px; height: 80px; top: 40%; left: -200px; animation-duration: 100s; }
+.cloud:nth-child(3) { width: 130px; height: 70px; top: 70%; left: -180px; animation-duration: 90s; }
 
 @keyframes float {
   0% { transform: translateX(-250px); }
-  100% { transform: translateX(500px); }
+  100% { transform: translateX(600px); }
 }
 
-.chat-header,
-.lang-select,
-.chat-messages,
-.chat-input {
+/* Cabeçalho */
+.chat-header {
+  background: #2563eb;
+  color: white;
+  text-align: center;
+  padding: 15px;
+  font-weight: bold;
+  z-index: 2;
   position: relative;
-  z-index: 1;
+}
+
+/* Área de mensagens */
+.chat-messages {
+  flex: 1;
+  padding: 15px;
+  overflow-y: auto;
+  background: #f1f5f9;
+  display: flex;
+  flex-direction: column;
+  z-index: 2;
+}
+
+.msg {
+  margin: 8px 0;
+  padding: 10px 14px;
+  border-radius: 18px;
+  max-width: 80%;
+  word-wrap: break-word;
+  animation: fadeIn 0.3s ease;
+  text-align: left;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.me {
+  align-self: flex-end;
+  background: #dbeafe;
+  color: #1e3a8a;
+  border-bottom-right-radius: 4px;
+}
+
+.other {
+  align-self: flex-start;
+  background: #dcfce7;
+  color: #14532d;
+  border-bottom-left-radius: 4px;
+}
+
+.system {
+  text-align: center;
+  color: #666;
+  font-size: 13px;
+}
+
+.username {
+  font-size: 13px;
+  font-weight: bold;
+  margin-bottom: 3px;
+  color: #334155;
+}
+
+.original {
+  opacity: 0.6;
+  font-size: 14px;
+}
+
+.translated {
+  font-weight: bold;
+  color: #0f172a;
+}
+
+/* Campo de entrada */
+.chat-input {
+  display: flex;
+  padding: 10px;
+  background: #f9fafb;
+  border-top: 1px solid #e5e7eb;
+  z-index: 2;
+}
+
+.chat-input input {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 12px;
+  font-size: 15px;
+  margin-right: 8px;
+}
+
+.chat-input button {
+  background: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 14px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.chat-input button:hover {
+  background: #1e3a8a;
+}
+
+.lang-select {
+  background: #eef2ff;
+  padding: 10px;
+  text-align: center;
+  z-index: 2;
+  position: relative;
+}
+
+.lang-select input, .lang-select select {
+  margin: 4px 0;
+  padding: 6px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+}
+
+.lang-select button {
+  background: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 14px;
+  cursor: pointer;
+  transition: 0.2s;
+  margin-top: 6px;
+}
+
+.lang-select button:hover {
+  background: #1e3a8a;
 }
