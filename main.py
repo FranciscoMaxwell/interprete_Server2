@@ -7,59 +7,67 @@ import os, threading, time, uuid
 
 app = FastAPI()
 
-# Servir os arquivos estáticos (CSS, JS, etc)
 app.mount("/static", StaticFiles(directory="static"), name="static")
-
 
 @app.get("/")
 async def home():
-    """Serve o arquivo index.html principal"""
     return HTMLResponse(open("static/index.html", "r", encoding="utf-8").read())
 
+# Lista de clientes conectados
+clients = []
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
-    """Canal de comunicação em tempo real"""
     await websocket.accept()
-    print("🔗 Cliente conectado via WebSocket")
+    user = {"ws": websocket, "lang": "en"}  # idioma padrão
+    clients.append(user)
+    print("🔗 Cliente conectado.")
 
     try:
         while True:
-            data = await websocket.receive_text()
-            print(f"📨 Recebido: {data}")
+            data = await websocket.receive_json()
 
-            # Traduz o texto
-            translated = GoogleTranslator(source="auto", target="en").translate(data)
+            # Registro do idioma
+            if data["type"] == "register":
+                user["lang"] = data["lang"]
+                await websocket.send_json({
+                    "type": "system",
+                    "msg": f"✅ Conectado! Idioma: {user['lang']}"
+                })
+                continue
 
-            # Gera um nome único para o arquivo de áudio
-            audio_file = f"static/audio_{uuid.uuid4().hex[:8]}.mp3"
+            # Mensagem enviada por um usuário
+            if data["type"] == "message":
+                text = data["text"]
 
-            try:
-                tts = gTTS(translated, lang="en")
-                tts.save(audio_file)
-            except Exception as e:
-                print(f"⚠️ Erro ao gerar áudio: {e}")
-                audio_file = None
+                for c in clients:
+                    if c != user:
+                        # Tradução cruzada: envia no idioma do outro
+                        translated = GoogleTranslator(
+                            source=user["lang"], target=c["lang"]
+                        ).translate(text)
 
-            # 🧹 Thread para apagar o áudio após 30 segundos
-            if audio_file:
-                threading.Thread(
-                    target=lambda f=audio_file: (
-                        time.sleep(30),
-                        os.remove(f) if os.path.exists(f) else None
-                    )
-                ).start()
+                        # Cria áudio
+                        audio_file = f"static/audio_{uuid.uuid4().hex[:8]}.mp3"
+                        try:
+                            gTTS(translated, lang=c["lang"]).save(audio_file)
+                        except Exception as e:
+                            print("⚠️ Erro ao gerar áudio:", e)
+                            audio_file = None
 
-            # Envia resposta ao cliente
-            await websocket.send_json({
-                "type": "translation",
-                "text": translated,
-                "audio": f"/{audio_file}" if audio_file else None
-            })
+                        # Remove áudio depois de 30s
+                        threading.Thread(target=lambda: (
+                            time.sleep(30),
+                            os.remove(audio_file) if audio_file and os.path.exists(audio_file) else None
+                        )).start()
+
+                        await c["ws"].send_json({
+                            "type": "translation",
+                            "from": user["lang"],
+                            "text": translated,
+                            "audio": f"/{audio_file}" if audio_file else None
+                        })
 
     except WebSocketDisconnect:
         print("🔌 Cliente desconectado")
-    except Exception as e:
-        print(f"⚠️ Erro inesperado: {e}")
-    finally:
-        await websocket.close()
+        clients.remove(user)
